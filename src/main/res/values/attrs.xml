@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BounceBallView">
+        <attr name="bounce_count" format="integer"/>
+        <attr name="ball_color" format="color"/>
+        <attr name="ball_radius" format="dimension"/>
+        <attr name="anim_duration" format="integer"/>
+        <attr name="ball_count" format="integer"/>
+        <attr name="ball_delay" format="integer"/>
+        <attr name="physic_mode" format="boolean"/>
+        <attr name="random_color" format="boolean"/>
+        <attr name="random_radius" format="boolean"/>
+        <attr name="random_path" format="boolean"/>
+    </declare-styleable>
+</resources>
