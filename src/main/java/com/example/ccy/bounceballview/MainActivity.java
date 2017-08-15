@@ -7,14 +7,28 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import static com.example.ccy.bounceballview.R.id.bbv1;
+import static com.example.ccy.bounceballview.R.id.radius;
+import static com.example.ccy.bounceballview.R.id.random_color;
 
 public class MainActivity extends AppCompatActivity {
 
     private BounceBallView bbv1;
-    private BounceBallView bbv2;
-    private BounceBallView bbv3;
-    private BounceBallView bbv4;
+    private EditText bounceCount;
+    private EditText ballCount;
+    private EditText ballDelay;
+    private EditText duration;
+    private EditText radius;
+    private CheckBox physicMode;
+    private CheckBox randomPath;
+    private CheckBox randomColor;
+    private CheckBox randomRadius;
     private Button b1;
+    private Button b2;
     private BallDialog dialog;
 
     @Override
@@ -22,14 +36,35 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         dialog = new BallDialog();
+
         bbv1 = (BounceBallView) findViewById(R.id.bbv1);
-//        bbv2 = (BounceBallView) findViewById(R.id.bbv2);
-//        bbv3 = (BounceBallView) findViewById(R.id.bbv3);
-        bbv4 = (BounceBallView) findViewById(R.id.bbv4);
+        ballCount = (EditText) findViewById(R.id.ball_count);
+        ballDelay = (EditText) findViewById(R.id.ball_delay);
+        bounceCount = (EditText) findViewById(R.id.bounce_count);
+        radius = (EditText) findViewById(R.id.radius);
+        duration = (EditText) findViewById(R.id.duration);
+        physicMode = (CheckBox) findViewById(R.id.physic_mode);
+        randomColor = (CheckBox) findViewById(random_color);
+        randomPath = (CheckBox) findViewById(R.id.random_path);
+        randomRadius = (CheckBox) findViewById(R.id.random_radius);
+
+        bbv1.post(new Runnable() {
+            @Override
+            public void run() {
+                initText();
+            }
+        });
         bbv1.start();
-//        bbv2.start();
-//        bbv3.start();
-        bbv4.start();
+
+        b2 = (Button) findViewById(R.id.b2);
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                apply(bbv1);
+                initText();
+                bbv1.start();
+            }
+        });
 
         b1 = (Button) findViewById(R.id.b1);
         b1.setOnClickListener(new View.OnClickListener() {
@@ -38,6 +73,40 @@ public class MainActivity extends AppCompatActivity {
                 dialog.show(getFragmentManager(),"1");
             }
         });
+    }
+
+    private void initText(){
+        ballCount.setText(bbv1.getBallCount()+"");
+        ballDelay.setText(bbv1.getBallDelay()+"");
+        bounceCount.setText(bbv1.getBounceCount()+"");
+        duration.setText(bbv1.getDefaultDuration()+"");
+        radius.setText(bbv1.getRadius()+"");
+        physicMode.setChecked(bbv1.isPhysicsMode());
+        randomRadius.setChecked(bbv1.isRandomRadius());
+        randomPath.setChecked(bbv1.isRandomBallPath());
+        randomColor.setChecked(bbv1.isRandomColor());
+    }
+
+    public void apply(BounceBallView bbv){
+        if(bbv == null){
+            Toast.makeText(this,"BounceBallView is null",Toast.LENGTH_LONG).show();
+            return;
+        }
+        try{
+            bbv.config()
+                    .ballCount(Integer.parseInt(ballCount.getText().toString()))
+                    .bounceCount(Integer.parseInt(bounceCount.getText().toString()))
+                    .ballDelay(Integer.parseInt(ballDelay.getText().toString()))
+                    .duration(Integer.parseInt(duration.getText().toString()))
+                    .radius(Float.parseFloat(radius.getText().toString()))
+                    .isPhysicMode(physicMode.isChecked())
+                    .isRamdomPath(randomPath.isChecked())
+                    .isRandomColor(randomColor.isChecked())
+                    .isRandomRadius(randomRadius.isChecked())
+                    .apply();
+        }catch (Exception e){
+            Toast.makeText(this,"错误",Toast.LENGTH_LONG).show();
+        }
     }
 
 }

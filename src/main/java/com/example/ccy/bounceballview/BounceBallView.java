@@ -13,6 +13,7 @@ import android.graphics.Path;
 import android.graphics.PathMeasure;
 import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.Interpolator;
@@ -26,12 +27,16 @@ public class BounceBallView extends View {
     /**
      * 常量
      */
+    private final static String TAG = "BounceBallView";
     private final float DEFAULT_BALL_RADIUS = dp2px(5);
     private static final int DEFAULT_BALL_COLOR = 0xff000000;
     private static final int DEFAULT_BOUNCE_COUNT = 2;
     private static final int DEFAULT_ANIM_DURATION = 2400;
-    private static final int DEFAULT_BALL_COUNT = 8;
+    private static final int DEFAULT_BALL_COUNT = 10;
     private static final int DEFAULT_BALL_DELAY = (int) (DEFAULT_ANIM_DURATION / DEFAULT_BALL_COUNT);
+
+
+
     /**
      * 数据
      */
@@ -63,26 +68,24 @@ public class BounceBallView extends View {
     private float[] randomTransRatioY;
     private int[] randomBallColors;
     private float[] randomRadius;
-
     /**
      * 动画
      */
+    private int defaultDuration;
     private boolean isPhysicsMode = true; //是否开启物理效果(下落加速，上弹减速）
     private Interpolator physicInterpolator; //物理效果插值器
     private ValueAnimator[] translateAnim; // 作用与小球位置变换
     private float[] translateFraction; //动画比例 [0,1]
     private ObjectAnimator[] toAlphaAnim;//作用于画笔从不透明到透明
     private ObjectAnimator[] fromAlphaAnim;//做用于画笔从透明到不透明
-    private int defaultDuration;
     MultiDecelerateAccelerateInterpolator interCreater;
     private Interpolator defaultInterpolator = new LinearInterpolator();
 
-//    /**
-//     * 动态配置
-//     */
-//    private boolean needRecreateAnim = false;
-//    private boolean needRecreatePath = false;
-//    private boolean needRequest = false;
+    /**
+     * 动态配置
+     */
+    private boolean isTransaction = false; //是否已开启动态配置事务
+
 
 
     public BounceBallView(Context context) {
@@ -115,7 +118,7 @@ public class BounceBallView extends View {
 
     private void checkAttrs() {
         radius = radius >= 0 ? radius : DEFAULT_BALL_RADIUS;
-        ballColor = ballColor >= 0 ? ballColor : DEFAULT_BALL_COLOR;
+//        ballColor = ballColor >= 0 ? ballColor : DEFAULT_BALL_COLOR;
         bounceCount = bounceCount >= 0 ? bounceCount : DEFAULT_BOUNCE_COUNT;
         ballCount = ballCount >= 1 ? ballCount : DEFAULT_BALL_COUNT;
         ballDelay = ballDelay >= 0 ? ballDelay : DEFAULT_BALL_DELAY;
@@ -354,6 +357,7 @@ public class BounceBallView extends View {
                 }
             });
         }
+
     }
 
     /**
@@ -437,13 +441,197 @@ public class BounceBallView extends View {
     }
 
 
-    public void setPhysicsMode(boolean physicsMode) {
-        isPhysicsMode = physicsMode;
+    /*
+         --------------以下为动态配置、各种setter/getter
+     */
+
+    /**
+     * 开启配置事务，可连缀配置属性，最后调用{@link #apply()}使配置生效
+     * @return
+     */
+    public BounceBallView config(){
+        for (int i = 0; i < translateAnim.length; i++) {
+            translateAnim[i].cancel();
+            translateAnim[i] = null;
+        }
+        isTransaction = true;
+        return this;
     }
 
-    public void setRandomBallPath(boolean randomBallPath) {
-        isRandomBallPath = randomBallPath;
+    /**
+     * 使应用配置，在这之前先调用{@link #config()}
+     */
+    public void apply(){
+
+        if(isTransaction == true){
+            Log.w(TAG,"调用apply()之前没有调用过config()函数!");
+        }
+        isTransaction = false;
+
+        checkAttrs();
+        initData();
+        requestLayout();
+        invalidate();
     }
+
+    /**
+     * 小球半径
+     * @param radius 默认5dp
+     * @return
+     */
+    public BounceBallView radius(float radius){
+        check();
+        this.radius = radius;
+        return this;
+    }
+
+    /**
+     * 小球颜色
+     * @param ballColor 默认黑色，{@link #isRandomColor} 为true时无效
+     * @return
+     */
+    public BounceBallView ballColor(int ballColor){
+        check();
+        this.ballColor = ballColor;
+        return this;
+    }
+
+    /**
+     * 小球数量
+     * @param ballCount 默认10
+     * @return
+     */
+    public BounceBallView ballCount(int ballCount){
+        check();
+        this.ballCount = ballCount;
+        return this;
+    }
+
+    /**
+     * 小球弹跳次数
+     * @param bounceCount  默认2次
+     * @return
+     */
+    public BounceBallView bounceCount(int bounceCount){
+        check();
+        this.bounceCount = bounceCount;
+        return this;
+    }
+
+    /**
+     * 相邻小球出现间隔
+     * @param ballDelay  默认为（动画时长/小球数量）。单位ms
+     * @return
+     */
+    public BounceBallView ballDelay(int ballDelay){
+        check();
+        this.ballDelay = ballDelay;
+        return this;
+    }
+
+    /**
+     * 一个小球一次完整的动画时长
+     * @param defaultDuration 默认2400ms。单位ms
+     * @return
+     */
+    public BounceBallView duration(int defaultDuration){
+        check();
+        this.defaultDuration = defaultDuration;
+        return  this;
+    }
+
+    /**
+     * 是否颜色随机
+     * @param isRandomColor 默认true
+     * @return
+     */
+    public BounceBallView isRandomColor(boolean isRandomColor){
+        check();
+        this.isRandomColor = isRandomColor;
+        return this;
+    }
+
+    /**
+     * 是否路径稍微随机偏移
+     * @param isRandomBallPath 默认true
+     * @return
+     */
+    public BounceBallView isRamdomPath(boolean isRandomBallPath){
+        check();
+        this.isRandomBallPath = isRandomBallPath;
+        return this;
+    }
+
+    /**
+     * 小球大小是否稍微随机偏移
+     * @param isRandomRadius 默认true
+     * @return
+     */
+    public BounceBallView isRandomRadius(boolean isRandomRadius){
+        check();
+        this.isRandomRadius = isRandomRadius;
+        return this;
+    }
+
+    /**
+     * 是否开启仿物理效果（下落加速上弹减速）
+     * @param isPhysicsMode 默认true
+     * @return
+     */
+    public BounceBallView isPhysicMode(boolean isPhysicsMode){
+        check();
+        this.isPhysicsMode = isPhysicsMode;
+        return this;
+    }
+
+    private void check(){
+        if(isTransaction){
+            return;
+        }else{
+            throw new RuntimeException("请先调用config()来开启配置，调用apply()来应用配置");
+        }
+    }
+
+    public float getRadius() {
+        return radius;
+    }
+
+    public int getBallColor() {
+        return ballColor;
+    }
+
+    public int getBounceCount() {
+        return bounceCount;
+    }
+
+    public int getBallCount() {
+        return ballCount;
+    }
+
+    public int getBallDelay() {
+        return ballDelay;
+    }
+
+    public boolean isRandomBallPath() {
+        return isRandomBallPath;
+    }
+
+    public boolean isRandomColor() {
+        return isRandomColor;
+    }
+
+    public boolean isRandomRadius() {
+        return isRandomRadius;
+    }
+
+    public int getDefaultDuration() {
+        return defaultDuration;
+    }
+
+    public boolean isPhysicsMode() {
+        return isPhysicsMode;
+    }
+
 
     private float dp2px(float dp) {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
