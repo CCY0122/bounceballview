@@ -27,7 +27,7 @@ android小球自由落体弹跳动画效果的自定义控件<br/>
 * bounce_count :小球弹跳次数 
 * ball_color:小球颜色
 * ball_count:小球数量
-* ball_radius:小球颜色
+* ball_radius:小球半径
 * ball_delay:小球出现时间间隔（当小球数大于1时）
 * anim_duration:小球一次动画时长
 * physic_mode : 开启物理效果（下落加速上升减速）
