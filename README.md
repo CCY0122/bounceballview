@@ -1,5 +1,6 @@
 # bounceballview
 android小球自由落体弹跳动画效果的自定义控件<br/>
+源码解析博客地址：[http://blog.csdn.net/ccy0122/article/details/77427795](http://blog.csdn.net/ccy0122/article/details/77427795)
 
 效果图：
 ====
