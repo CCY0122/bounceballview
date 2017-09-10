@@ -2,7 +2,6 @@ package com.example.ccy.bounceballview;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -76,8 +75,6 @@ public class BounceBallView extends View {
     private Interpolator physicInterpolator; //物理效果插值器
     private ValueAnimator[] translateAnim; // 作用与小球位置变换
     private float[] translateFraction; //动画比例 [0,1]
-    private ObjectAnimator[] toAlphaAnim;//作用于画笔从不透明到透明
-    private ObjectAnimator[] fromAlphaAnim;//做用于画笔从透明到不透明
     MultiDecelerateAccelerateInterpolator interCreater;
     private Interpolator defaultInterpolator = new LinearInterpolator();
 
@@ -149,8 +146,6 @@ public class BounceBallView extends View {
 
         translateFraction = new float[ballCount];
         translateAnim = new ValueAnimator[ballCount];
-        toAlphaAnim = new ObjectAnimator[ballCount];
-        fromAlphaAnim = new ObjectAnimator[ballCount];
 
     }
 
@@ -440,6 +435,28 @@ public class BounceBallView extends View {
                 (int) (255 * Math.random()));
     }
 
+    /**
+     * 取消已有动画，释放资源
+     */
+    public void cancel(){
+        if(translateAnim != null){
+            for (int i = 0; i < translateAnim.length; i++) {
+                if(translateAnim[i] != null){
+                    translateAnim[i].cancel();
+                    translateAnim[i] = null;
+                }
+            }
+            translateAnim = null;
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+//        Log.d("ccy","-----------------------------detached");
+        cancel();
+        super.onDetachedFromWindow();
+    }
+
 
     /*
          --------------以下为动态配置、各种setter/getter
@@ -467,6 +484,7 @@ public class BounceBallView extends View {
             Log.w(TAG,"调用apply()之前没有调用过config()函数!");
         }
         isTransaction = false;
+        cancel();
 
         checkAttrs();
         initData();

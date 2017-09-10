@@ -52,7 +52,7 @@ public class MultiDecelerateAccelerateInterpolator {
         intervalY = Math.abs(originEnd.y - originStart.y);
         bezierControlRatioX = ratiox;
         bezierControlRatioY = ratioy;
-        Log.d("ccy","intervalx,y = " + intervalX + ";" + intervalY);
+//        Log.d("ccy","intervalx,y = " + intervalX + ";" + intervalY);
     }
 
 
